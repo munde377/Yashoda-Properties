@@ -46,6 +46,14 @@ def get_db():
 @app.on_event("startup")
 def startup_event():
     start_scheduler()
+    db = SessionLocal()
+    try:
+        if crud.get_any_user(db) is None:
+            hashed_password = get_password_hash("admin123")
+            crud.create_user(db, "admin", None, models.UserRole.admin, hashed_password)
+            print("Created default admin user: admin / admin123")
+    finally:
+        db.close()
 
 @app.get("/health")
 def health_check():
