@@ -1,0 +1,6 @@
+frontend/
+.git/
+.venv/
+venv/
+.env.example
+*.md
