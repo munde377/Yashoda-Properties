@@ -29,14 +29,17 @@ RUN apt-get install -y nodejs
 RUN python -m pip install --upgrade pip setuptools wheel
 
 # Copy the built frontend from the previous stage
-COPY --from=frontend-build /app/frontend/dist ./frontend/dist
+COPY --from=frontend-build /app/frontend/dist /app/frontend/dist
 
 # Also mirror the frontend build to /frontend/dist for deployment compatibility
 RUN mkdir -p /frontend/dist && cp -r /app/frontend/dist/* /frontend/dist/ || true
 
 # Verify frontend files were copied
-RUN ls -la frontend/dist/ || echo "Frontend dist not found!"
-RUN ls -la /frontend/dist/ || echo "/frontend/dist not found!"
+RUN pwd
+RUN ls -la /app
+RUN ls -la /app/frontend
+RUN ls -la /app/frontend/dist || echo "/app/frontend/dist not found!"
+RUN ls -la /frontend/dist || echo "/frontend/dist not found!"
 
 # Copy backend files
 COPY backend/requirements.txt ./backend/
@@ -54,7 +57,7 @@ RUN mkdir -p /data
 # Set environment variables
 ENV DATABASE_URL=sqlite:////data/app.db
 ENV PYTHONPATH=/app/backend
-ENV FRONTEND_DIST_PATH=/app/frontend/dist
+ENV FRONTEND_DIST_PATH=/frontend/dist
 
 # Expose port
 EXPOSE 8000
