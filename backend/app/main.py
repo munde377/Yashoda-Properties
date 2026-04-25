@@ -97,8 +97,6 @@ def create_customer(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user),
 ):
-    if current_user.role != models.UserRole.admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin privileges required")
     if crud.get_customer_by_phone(db, customer.phone):
         raise HTTPException(status_code=400, detail="Customer with this phone already exists.")
     return crud.create_customer(db, customer)
@@ -128,8 +126,6 @@ def update_customer(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user),
 ):
-    if current_user.role != models.UserRole.admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin privileges required")
     customer = crud.get_customer(db, customer_id)
     if not customer:
         raise HTTPException(status_code=404, detail="Customer not found")
@@ -141,8 +137,6 @@ def delete_customer(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user),
 ):
-    if current_user.role != models.UserRole.admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin privileges required")
     crud.delete_customer(db, customer_id)
     return {"detail": "Customer deleted"}
 
