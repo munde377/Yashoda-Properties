@@ -32,17 +32,32 @@ function CustomerManager() {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError(null)
+    const data: any = {
+      name: formState.name,
+      phone: formState.phone,
+      email: formState.email || undefined,
+      tags: formState.tags || undefined,
+    }
+    if (formState.birthday) {
+      data.birthday = formState.birthday
+    }
     api
-      .post<Customer>('/customers', {
-        ...formState,
-        birthday: formState.birthday || null,
-      })
+      .post<Customer>('/customers', data)
       .then(() => {
         setFormState({ name: '', phone: '', email: '', birthday: '', tags: '' })
         fetchCustomers()
       })
       .catch((err) => {
-        setError(err.response?.data?.detail || 'Unable to save customer.')
+        const errorData = err.response?.data
+        let errorMessage = 'Unable to save customer.'
+        if (errorData?.detail) {
+          if (Array.isArray(errorData.detail)) {
+            errorMessage = errorData.detail.map((e: any) => `${e.loc.join('.')}: ${e.msg}`).join(', ')
+          } else {
+            errorMessage = errorData.detail
+          }
+        }
+        setError(errorMessage)
       })
   }
 

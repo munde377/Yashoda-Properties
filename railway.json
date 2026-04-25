@@ -2,8 +2,8 @@
   "services": [
     {
       "name": "backend",
-      "root": "./backend",
-      "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+      "root": ".",
+      "dockerfile": "./Dockerfile"
     }
   ]
 }
