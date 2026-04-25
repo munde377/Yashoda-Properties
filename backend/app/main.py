@@ -6,6 +6,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from . import crud, models, schemas
@@ -248,7 +249,27 @@ def dashboard_metrics(
 ):
     return crud.get_dashboard_metrics(db)
 
-# Serve static frontend files
+
+# Serve static frontend files for SPA routing
 frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
-if frontend_dist.exists():
-    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
+
+
+@app.get("/{full_path:path}")
+async def serve_spa(full_path: str):
+    """Serve SPA frontend for all non-API routes"""
+    # Don't serve SPA for known file types (static assets)
+    if full_path and ("." in full_path):
+        file_path = frontend_dist / full_path
+        if file_path.exists():
+            return FileResponse(file_path)
+        # Return 404 for missing static files
+        return {"error": "Not found"}, 404
+    
+    # Serve index.html for all other routes (SPA routing)
+    index_path = frontend_dist / "index.html"
+    if index_path.exists():
+        return FileResponse(index_path)
+    
+    # If frontend not built, return helpful error
+    print(f"Warning: Frontend dist not found at {frontend_dist}")
+    return {"error": "Frontend not available", "path": str(frontend_dist)}, 503
