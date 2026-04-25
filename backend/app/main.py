@@ -248,13 +248,24 @@ def dashboard_metrics(
 frontend_dist_env = os.getenv('FRONTEND_DIST_PATH')
 if frontend_dist_env:
     frontend_dist = Path(frontend_dist_env)
+    print(f"Using FRONTEND_DIST_PATH: {frontend_dist}")
 else:
     # Calculate path: from /app/backend/app/main.py, go up 3 levels to /app, then frontend/dist
     frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
+    print(f"Calculated frontend_dist: {frontend_dist}")
 
 # Fallback: if that doesn't exist, try relative to current working directory
-if not frontend_dist.exists() and Path("../../frontend/dist").exists():
-    frontend_dist = Path("../../frontend/dist").resolve()
+if not frontend_dist.exists():
+    fallback_path = Path("../../frontend/dist").resolve()
+    print(f"Trying fallback path: {fallback_path}")
+    if fallback_path.exists():
+        frontend_dist = fallback_path
+        print(f"Using fallback path: {frontend_dist}")
+
+print(f"Final frontend_dist: {frontend_dist}")
+print(f"Frontend dist exists: {frontend_dist.exists()}")
+if frontend_dist.exists():
+    print(f"Contents of frontend_dist: {list(frontend_dist.iterdir()) if frontend_dist.is_dir() else 'Not a directory'}")
 
 
 @app.get("/{full_path:path}")
@@ -274,13 +285,13 @@ async def serve_spa(full_path: str):
         return FileResponse(index_path)
     
     # If frontend not built, return helpful error with debugging info
-    print(f"ERROR: Frontend dist not found at {frontend_dist}")
-    print(f"Frontend dist exists: {frontend_dist.exists()}")
-    print(f"Current working directory: {os.getcwd()}")
-    print(f"__file__ = {__file__}")
-    
-    return {
-        "error": "Frontend not available", 
+    error_info = {
+        "error": "Frontend not available",
         "path": str(frontend_dist),
-        "cwd": os.getcwd()
-    }, 503
+        "cwd": os.getcwd(),
+        "frontend_dist_exists": frontend_dist.exists(),
+        "files_in_dist": list(frontend_dist.iterdir()) if frontend_dist.exists() and frontend_dist.is_dir() else None,
+        "__file__": __file__
+    }
+    print(f"ERROR: {error_info}")
+    return error_info, 503
