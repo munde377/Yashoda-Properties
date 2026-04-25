@@ -3,11 +3,17 @@ FROM node:18-alpine AS frontend-build
 WORKDIR /app
 
 # Copy frontend files
+COPY frontend/package*.json ./frontend/
 COPY frontend/ ./frontend/
 
 WORKDIR /app/frontend
 
-RUN npm install --production=false && npm run build
+# Install dependencies and build
+RUN npm install --production=false
+RUN npm run build
+
+# Verify build output
+RUN ls -la dist/
 
 # Backend stage
 FROM python:3.10-slim
@@ -20,6 +26,9 @@ RUN python -m pip install --upgrade pip setuptools wheel
 
 # Copy the built frontend from the previous stage
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
+
+# Verify frontend files were copied
+RUN ls -la frontend/dist/
 
 # Copy backend files
 COPY backend/requirements.txt ./backend/
