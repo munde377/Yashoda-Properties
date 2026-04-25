@@ -1,4 +1,5 @@
-FROM node:18-alpine AS frontend-build
+# Frontend build stage
+FROM node:18 AS frontend-build
 
 WORKDIR /app
 
@@ -20,15 +21,18 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install build tools
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential && rm -rf /var/lib/apt/lists/*
+# Install build tools and Node.js for potential frontend building
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential curl && rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+RUN apt-get install -y nodejs
+
 RUN python -m pip install --upgrade pip setuptools wheel
 
 # Copy the built frontend from the previous stage
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
 # Verify frontend files were copied
-RUN ls -la frontend/dist/
+RUN ls -la frontend/dist/ || echo "Frontend dist not found!"
 
 # Copy backend files
 COPY backend/requirements.txt ./backend/
