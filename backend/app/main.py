@@ -1,8 +1,11 @@
 from datetime import datetime
+import os
+from pathlib import Path
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 
 from . import crud, models, schemas
@@ -244,3 +247,8 @@ def dashboard_metrics(
     current_user: models.User = Depends(get_current_active_user),
 ):
     return crud.get_dashboard_metrics(db)
+
+# Serve static frontend files
+frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
+if frontend_dist.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
