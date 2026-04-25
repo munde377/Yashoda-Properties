@@ -246,26 +246,32 @@ def dashboard_metrics(
 
 # Serve static frontend files for SPA routing
 frontend_dist_env = os.getenv('FRONTEND_DIST_PATH')
+possible_frontend_paths = []
 if frontend_dist_env:
-    frontend_dist = Path(frontend_dist_env)
-    print(f"Using FRONTEND_DIST_PATH: {frontend_dist}")
-else:
-    # Calculate path: from /app/backend/app/main.py, go up 3 levels to /app, then frontend/dist
-    frontend_dist = Path(__file__).parent.parent.parent / "frontend" / "dist"
-    print(f"Calculated frontend_dist: {frontend_dist}")
+    possible_frontend_paths.append(Path(frontend_dist_env))
 
-# Fallback: if that doesn't exist, try relative to current working directory
-if not frontend_dist.exists():
-    fallback_path = Path("../../frontend/dist").resolve()
-    print(f"Trying fallback path: {fallback_path}")
-    if fallback_path.exists():
-        frontend_dist = fallback_path
-        print(f"Using fallback path: {frontend_dist}")
+# Primary expected path from the Docker build
+possible_frontend_paths.append(Path(__file__).resolve().parents[2] / "frontend" / "dist")
+possible_frontend_paths.append(Path("/app/frontend/dist"))
+possible_frontend_paths.append(Path("/frontend/dist"))
+possible_frontend_paths.append(Path("../../frontend/dist").resolve())
+
+frontend_dist = None
+for path in possible_frontend_paths:
+    print(f"Checking frontend dist path: {path}")
+    if path.exists():
+        frontend_dist = path
+        print(f"Selected frontend dist path: {frontend_dist}")
+        break
+
+if frontend_dist is None:
+    # Default to env path if set, otherwise the first path in list
+    frontend_dist = Path(frontend_dist_env) if frontend_dist_env else possible_frontend_paths[0]
 
 print(f"Final frontend_dist: {frontend_dist}")
 print(f"Frontend dist exists: {frontend_dist.exists()}")
-if frontend_dist.exists():
-    print(f"Contents of frontend_dist: {list(frontend_dist.iterdir()) if frontend_dist.is_dir() else 'Not a directory'}")
+if frontend_dist.exists() and frontend_dist.is_dir():
+    print(f"Contents of frontend_dist: {list(frontend_dist.iterdir())}")
 
 
 @app.get("/{full_path:path}")

@@ -31,8 +31,12 @@ RUN python -m pip install --upgrade pip setuptools wheel
 # Copy the built frontend from the previous stage
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
+# Also mirror the frontend build to /frontend/dist for deployment compatibility
+RUN mkdir -p /frontend/dist && cp -r /app/frontend/dist/* /frontend/dist/ || true
+
 # Verify frontend files were copied
 RUN ls -la frontend/dist/ || echo "Frontend dist not found!"
+RUN ls -la /frontend/dist/ || echo "/frontend/dist not found!"
 
 # Copy backend files
 COPY backend/requirements.txt ./backend/
