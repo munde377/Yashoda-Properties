@@ -1,13 +1,11 @@
 from datetime import date, datetime
-
-from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
 
 from . import crud, models
 from .database import SessionLocal
 from .whatsapp_client import render_template, send_whatsapp_message
 
-scheduler = BackgroundScheduler()
+scheduler = None
 
 
 def send_birthday_notifications():
@@ -74,7 +72,14 @@ def run_scheduled_campaigns():
 
 
 def start_scheduler() -> None:
-    scheduler.add_job(send_birthday_notifications, "cron", hour=0, minute=5)
-    scheduler.add_job(send_festival_notifications, "cron", hour=0, minute=10)
-    scheduler.add_job(run_scheduled_campaigns, "interval", minutes=5)
-    scheduler.start()
+    global scheduler
+    try:
+        from apscheduler.schedulers.background import BackgroundScheduler
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(send_birthday_notifications, "cron", hour=0, minute=5)
+        scheduler.add_job(send_festival_notifications, "cron", hour=0, minute=10)
+        scheduler.add_job(run_scheduled_campaigns, "interval", minutes=5)
+        scheduler.start()
+        print("Scheduler started successfully")
+    except ImportError as e:
+        print(f"Warning: APScheduler not available ({e}). Scheduled tasks will not run. Background jobs disabled.")
