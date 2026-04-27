@@ -294,16 +294,17 @@ if os.path.exists(frontend_dist_path):
     app.mount("/", StaticFiles(directory=frontend_dist_path, html=True), name="frontend")
 else:
     print(f"WARNING: Frontend dist directory not found at {frontend_dist_path}")
-    # Fallback: serve a simple HTML page
-    @app.get("/")
-    def read_root():
-        return {"message": "Frontend not available. Please check deployment configuration."}
-
-import os
-
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-frontend_dist_path = os.path.join(BASE_DIR, "..", "frontend", "dist")
-
-print(f"DEBUG: Final path: {frontend_dist_path}")
-print(f"DEBUG: Exists: {os.path.exists(frontend_dist_path)}")
+    # Try alternate path calculation
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    alt_path = os.path.join(base_dir, "..", "frontend", "dist")
+    print(f"DEBUG: Trying alternate path: {alt_path}")
+    print(f"DEBUG: Alternate path exists: {os.path.exists(alt_path)}")
+    
+    if os.path.exists(alt_path):
+        print("DEBUG: Mounting static files from alternate path")
+        app.mount("/", StaticFiles(directory=alt_path, html=True), name="frontend")
+    else:
+        # Fallback: serve a simple HTML page
+        @app.get("/")
+        def read_root():
+            return {"message": "Frontend not available. Please check deployment configuration."}
