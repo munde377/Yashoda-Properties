@@ -3,6 +3,8 @@ __pycache__/
 .Python
 *.egg-info/
 dist/
+!frontend/dist/
+!frontend/dist/**
 build/
 *.egg
 .venv/
