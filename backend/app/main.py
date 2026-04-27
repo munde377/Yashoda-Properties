@@ -298,3 +298,12 @@ else:
     @app.get("/")
     def read_root():
         return {"message": "Frontend not available. Please check deployment configuration."}
+
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+frontend_dist_path = os.path.join(BASE_DIR, "..", "frontend", "dist")
+
+print(f"DEBUG: Final path: {frontend_dist_path}")
+print(f"DEBUG: Exists: {os.path.exists(frontend_dist_path)}")
