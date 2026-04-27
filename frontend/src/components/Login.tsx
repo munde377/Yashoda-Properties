@@ -7,23 +7,27 @@ interface LoginProps {
 }
 
 function Login({ onLogin }: LoginProps) {
+  // Form state management
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
+  // Handle form submission and authentication
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError(null)
     setIsLoading(true)
 
+    // Prepare form data for OAuth2 authentication
     const data = new URLSearchParams()
     data.append('username', username)
     data.append('password', password)
 
     try {
       const response = await api.post('/token', data)
+      // Store JWT token and notify parent component
       localStorage.setItem('access_token', response.data.access_token)
       onLogin()
     } catch (err) {
