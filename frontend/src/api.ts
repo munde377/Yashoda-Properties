@@ -1,7 +1,18 @@
 import axios from 'axios'
 
-// Configure API base URL - use environment variable for production, localhost for development
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// Configure API base URL
+// In development: use localhost:8000 for separate backend server
+// In production (Render): use relative path (same domain, FastAPI serves both frontend & API)
+const API_URL = import.meta.env.VITE_API_URL || (() => {
+  if (typeof window === 'undefined') return 'http://localhost:8000'
+  
+  // Production: use relative path for same-domain requests
+  if (import.meta.env.PROD) {
+    return ''
+  }
+  // Development: use localhost backend
+  return 'http://localhost:8000'
+})()
 
 const api = axios.create({
   baseURL: API_URL,
