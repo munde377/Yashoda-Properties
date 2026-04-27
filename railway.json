@@ -1,9 +1,36 @@
 {
-  "services": [
+  "build": {
+    "builder": "dockerfile",
+    "dockerfilePath": "./Dockerfile"
+  },
+  "deploy": {
+    "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port $PORT",
+    "healthcheckPath": "/health"
+  },
+  "envVars": [
     {
-      "name": "backend",
-      "root": ".",
-      "dockerfile": "./Dockerfile"
+      "name": "PYTHONUNBUFFERED",
+      "value": "1"
+    },
+    {
+      "name": "DATABASE_URL",
+      "value": "sqlite:///./app.db"
+    },
+    {
+      "name": "SECRET_KEY",
+      "value": "CHANGE_THIS_SECRET"
+    },
+    {
+      "name": "ALGORITHM",
+      "value": "HS256"
+    },
+    {
+      "name": "ACCESS_TOKEN_EXPIRE_MINUTES",
+      "value": "30"
+    },
+    {
+      "name": "FRONTEND_DIST_PATH",
+      "value": "/app/frontend/dist"
     }
   ]
 }
