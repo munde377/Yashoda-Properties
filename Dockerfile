@@ -13,8 +13,15 @@ WORKDIR /app/frontend
 RUN npm install --production=false
 RUN npm run build
 
-# Verify build output
-RUN ls -la dist/
+# Verify build output - IMPORTANT for debugging
+RUN echo "=== Build verification ===" && \
+    ls -la && \
+    echo "=== Dist directory ===" && \
+    ls -la dist/ && \
+    echo "=== Assets directory ===" && \
+    ls -la dist/assets/ || echo "Assets not found!" && \
+    echo "=== index.html ===" && \
+    head -20 dist/index.html
 
 # Backend stage
 FROM python:3.10-slim
@@ -45,11 +52,16 @@ ENV DATABASE_URL=sqlite:////data/app.db
 ENV PYTHONPATH=/app/backend
 ENV FRONTEND_DIST_PATH=/app/frontend/dist
 
-# Debug: Verify frontend files exist
-RUN echo "DEBUG: Checking frontend dist..." && ls -la /app/frontend/dist/ && echo "Frontend verified!"
+# Verify frontend files exist in final stage
+RUN echo "=== Final stage frontend verification ===" && \
+    ls -la /app/frontend/ && \
+    echo "=== Frontend dist ===" && \
+    ls -la /app/frontend/dist/ && \
+    echo "=== Frontend assets ===" && \
+    ls -la /app/frontend/dist/assets/ 2>/dev/null || echo "Assets directory not found in final stage!"
 
 # Expose port
-EXPOSE 8000
+EXPOSE 10000
 
-# Run server
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run server - note: Render will override port to 10000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "10000"]

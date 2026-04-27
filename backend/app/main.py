@@ -285,12 +285,35 @@ def dashboard_metrics(
 
 
 # Mount static files for frontend (SPA fallback)
+import os
+import logging
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
 frontend_dist_path = os.getenv("FRONTEND_DIST_PATH", settings.frontend_dist_path)
 print(f"DEBUG: Frontend dist path: {frontend_dist_path}")
 print(f"DEBUG: Directory exists: {os.path.exists(frontend_dist_path)}")
 
+# Debug: List directory contents
 if os.path.exists(frontend_dist_path):
-    print("DEBUG: Mounting static files")
+    try:
+        contents = os.listdir(frontend_dist_path)
+        print(f"DEBUG: Contents of {frontend_dist_path}: {contents}")
+        
+        # Check for assets directory
+        assets_path = os.path.join(frontend_dist_path, "assets")
+        if os.path.exists(assets_path):
+            assets_contents = os.listdir(assets_path)
+            print(f"DEBUG: Assets folder contents: {assets_contents[:5]}...")  # First 5 items
+        else:
+            print(f"WARNING: Assets directory not found at {assets_path}")
+    except Exception as e:
+        print(f"ERROR listing directory: {e}")
+
+# Try to mount from primary path first
+if os.path.exists(frontend_dist_path):
+    print("DEBUG: Mounting static files from primary path")
     app.mount("/", StaticFiles(directory=frontend_dist_path, html=True), name="frontend")
 else:
     print(f"WARNING: Frontend dist directory not found at {frontend_dist_path}")
@@ -302,6 +325,16 @@ else:
     
     if os.path.exists(alt_path):
         print("DEBUG: Mounting static files from alternate path")
+        try:
+            contents = os.listdir(alt_path)
+            print(f"DEBUG: Contents of alternate path: {contents}")
+            assets_path_alt = os.path.join(alt_path, "assets")
+            if os.path.exists(assets_path_alt):
+                assets_contents_alt = os.listdir(assets_path_alt)
+                print(f"DEBUG: Assets folder contents (alt): {assets_contents_alt[:5]}...")
+        except Exception as e:
+            print(f"ERROR listing alt directory: {e}")
+        
         app.mount("/", StaticFiles(directory=alt_path, html=True), name="frontend")
     else:
         # Fallback: serve a simple HTML page
